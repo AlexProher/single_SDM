@@ -1,0 +1,39 @@
+{
+	"Position":{
+		"x": 0,
+		"y": 0.5,
+		"z": 0
+	},
+	"Wheel":{
+		"rWheel": 0.5,
+		"hWheel": 0.2,
+		"density": 1000.0,
+		"velocity": 6
+	},
+
+	"Body":
+	{
+		"xSize": 2.0,
+		"ySize": 1.0,
+		"zSize": 2.0,
+		"density": 0.25
+	},
+
+	"SD":
+	{
+		"spring": 200,
+		"damping": 5,
+		"base": 2
+	},
+	"Floor":
+	{
+		"x":100,
+		"z":5
+	},
+	"Camera":
+	{
+		"x":0,
+		"y":3,
+		"z":-10
+	}
+}
