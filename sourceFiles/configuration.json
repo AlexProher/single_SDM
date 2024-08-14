@@ -1,4 +1,5 @@
 {
+	"Control": true,
 	"Position":{
 		"x": 0.0,
 		"y": 1.2,
@@ -11,7 +12,7 @@
 		"velocity": 0
 	},
 	"Motor":{
-		"Speed": -5
+		"Speed": -1.5
 	},
 
 	"Body":
@@ -19,7 +20,7 @@
 		"xSize": 2.0,
 		"ySize": 1.0,
 		"zSize": 2.0,
-		"density": 0.375, // wc
+		"density": 0.375, // wc 
 		// "density": 0.25, 	//nominal
 		"velocity": 0
 	},
@@ -39,31 +40,31 @@
 	},
 	"Brick1":{
 		"Position":{
-			"x": 10.0,
+			"x": 0.0,
 			"y": 0.1,
 			"z": 0.0
 			},
 		"Dimention":{
-			"x": 20.0,
+			"x": 13.0,
 			"y": 0.2,
 			"z": 2.0
 			}
 		},
 	"Brick2":{
 		"Position":{
-			"x": 24.0,
+			"x": 11.0,
 			"y": 0.1,
 			"z": 0.0
 			},
 		"Dimention":{
-			"x": 5.0,
+			"x": 4.0,
 			"y": 0.2,
 			"z": 2.0
 			}
 		},
 	"Bumper":{
 		"Position":{
-			"x": 15.0,
+			"x": 4.0,
 			"y": -0.5,
 			"z": 0.0
 			},
@@ -73,7 +74,7 @@
 			}
 		},
 	"Noize":{
-		"x": 27.0
+		"x": 13.0
 		},
 	"Camera":
 	{

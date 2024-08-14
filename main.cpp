@@ -139,6 +139,7 @@ int main(int argc, char* argv[]) {
 
         AddFallingItems(sys, config["Noize"]["x"].GetDouble());
         
+        control = config["Control"].GetBool();
 
         // Add a socket framework object
         ChSocketFramework socket_tools;
@@ -215,19 +216,16 @@ int main(int argc, char* argv[]) {
         //while (time < 10)
         {
 
-            
-            
-
             // Render scene
             vis->BeginScene();
             vis->Render();
             vis->EndScene();
 
-            //actCamPosX = newSystem.GetBodyPos().x();
+            actCamPosX = newSystem.GetBodyPos().x();
 
-            //vis->UpdateCamera(ChVector3d(actCamPosX, actCamPosY, actCamPosZ), newSystem.GetBodyPos());
-            //tools::drawSpring(vis.get(), 0.3, newSystem.GetBodyPos(), newSystem.GetWheelPos(),
-            //                            ChColor(0.59f, 0.08f, 0.08f), 80, 10, true);
+            vis->UpdateCamera(ChVector3d(actCamPosX, actCamPosY, actCamPosZ), newSystem.GetBodyPos());
+            tools::drawSpring(vis.get(), 1, newSystem.GetBodyPos(), newSystem.GetWheelPos(),
+                                        ChColor(1, 1, 1), 80, 10, true);
 
             // Perform the integration stpe
             sys.DoStepDynamics(dt);
