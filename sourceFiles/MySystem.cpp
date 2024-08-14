@@ -33,12 +33,21 @@ MySystem::MySystem(Document& config) {
 		wheelDensity = config["Wheel"]["density"].GetDouble();
 	}
 
+	if (config.HasMember("Motor")) {
+		motorRotation = config["Motor"]["Speed"].GetDouble();
+		std::cout << "Motor speed - " << motorRotation << "\n";
+	}
+	motorFunction = chrono_types::make_shared<ChFunctionConst>(motorRotation);
+
 	if (config.HasMember("Floor")) {
 		xFloorDim = config["Floor"]["x"].GetDouble();
 		std::cout << "x Floor size - " << xFloorDim << "\n";
 
+		yFloorDim = config["Floor"]["z"].GetDouble();
+		std::cout << "y Floor size - " << xFloorDim << "\n";
+
 		zFloorDim = config["Floor"]["z"].GetDouble();
-		std::cout << "h Floor size - " << xFloorDim << "\n";
+		std::cout << "z Floor size - " << xFloorDim << "\n";
 	}
 
 	if (config.HasMember("Body")) {
@@ -86,7 +95,7 @@ void MySystem::CreateWheel() {
 	wheel->EnableCollision(true);
 	wheel->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
 
-
+	//wheel->SetFixed(true);
 	axis = chrono_types::make_shared<ChBody>();
 	axis->SetPos(ChVector3d(xPos, yPos, zPos));
 }
@@ -95,8 +104,9 @@ void MySystem::CreateBody() {
 	auto body_mat = chrono_types::make_shared<ChContactMaterialNSC>();
 	auto body_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
 	body = chrono_types::make_shared<ChBodyEasyBox>(xDim, yDim, zDim, bodyDensity, true, true, body_mat);
-	body->SetPos(ChVector3d(xPos, yPos + suspBase, zPos));
+	body->SetPos(ChVector3d(xPos, yPos + suspBase - rWheelDim, zPos));
 	body->GetVisualShape(0)->SetColor(ChColor(0.8, 0.7, 0.7));
+	body->AddForce(frcX);
 
 }
 
@@ -120,9 +130,10 @@ void MySystem::LinkSuspention() {
 	suspentionLink = chrono_types::make_shared<ChLinkTSDA>();
 	suspentionLink->Initialize(body, axis, false, body->GetPos(), axis->GetPos());
 	suspentionLink->SetSpringCoefficient(spring);
-	suspentionLink->SetRestLength(suspBase);
+	suspentionLink->SetRestLength(suspBase-rWheelDim);
 	suspentionLink->SetDampingCoefficient(damping);
-	suspentionLink->SetActuatorForce(actForce * body->GetMass());
+	//suspentionLink->SetActuatorForce(-actForce*body->GetMass());
+	suspentionLink->SetActuatorForce(0);
 }
 
 ChVector3d MySystem::GetBodyPos() {
@@ -137,6 +148,14 @@ ChVector3d MySystem::GetWheelPos() {
 	return wheel->GetPos();
 }
 
+ChVector3d MySystem::GetWheelVel() {
+	return wheel->GetLinVel();
+}
+
+ChVector3d MySystem::GetWheelAcc() {
+	return wheel->GetLinAcc();
+}
+
 void MySystem::SetWheelPos(ChVector3d pos) {
 	return wheel->SetPos(pos);
 }
@@ -149,6 +168,17 @@ void MySystem::UpdateActForce(double controlForce) {
 	suspentionLink->SetActuatorForce(actForce * body->GetMass() + controlForce);
 }
 
+void MySystem::CreateMotor() {
+
+	auto linkPos = wheel->GetPos();
+	motor = chrono_types::make_shared<ChLinkMotorRotationSpeed>();
+	motor->Initialize(wheel, axis, ChFrame<>(linkPos, QuatFromAngleZ(CH_PI_2)));
+	motor->SetSpeedFunction(motorFunction);
+}
+
+ChVector3d MySystem::getWheelContactForce() {
+	return wheel->GetContactForce();
+}
 
 void MySystem::AddSystem(ChSystemNSC& sys) {
 	CreateFloor();
@@ -162,6 +192,9 @@ void MySystem::AddSystem(ChSystemNSC& sys) {
 	sys.AddBody(axis);
 
 	LinkBodies();
+
+	CreateMotor();
+	sys.Add(motor);
 
 	LinkSuspention();
 

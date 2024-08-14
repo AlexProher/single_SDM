@@ -29,7 +29,12 @@ private:
 	std::shared_ptr<ChLinkMateSpherical> holdBodyRotationLink;
 	std::shared_ptr<ChLinkMateSpherical> holdBodyTranslationLink;
 
-	std::shared_ptr<ChForce> frc = chrono_types::make_shared<ChForce>();
+	std::shared_ptr<ChLinkMotorRotationSpeed> motor;
+	std::shared_ptr<ChFunctionConst> motorFunction;
+	double motorRotation = -2;
+
+	std::shared_ptr<ChForce> frcY = chrono_types::make_shared<ChForce>();
+	std::shared_ptr<ChForce> frcX = chrono_types::make_shared<ChForce>();
 
 
 	double bodyDensity = 100;
@@ -42,7 +47,7 @@ private:
 	double rWheelDim = 1;
 
 	double xFloorDim = 10;
-	double yFloorDim = 0.1f;
+	double yFloorDim = 10;
 	double zFloorDim = 10;
 
 	double suspBase = 3;
@@ -69,11 +74,19 @@ public:
 
 	ChVector3d GetWheelPos();
 
+	ChVector3d GetWheelVel();
+
+	ChVector3d GetWheelAcc();
+
+	ChVector3d getWheelContactForce();
+
 	void SetWheelPos(ChVector3d);
 
 	void SetWheelVel(double xVel);
 
 	void UpdateActForce(double);
+
+	void CreateMotor();
 
 	void LinkBodies();
 

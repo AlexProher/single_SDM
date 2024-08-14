@@ -29,6 +29,7 @@
 #include "chrono_thirdparty/rapidjson/istreamwrapper.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+#include "chrono/core/ChRandom.h"
 
 // Use the namespace of Chrono
 using namespace chrono;
@@ -50,18 +51,50 @@ void ReadFileJSON(const std::string& filename, Document& d) {
     }
 }
 
-void CreateBrick(ChSystemNSC& sys, ChVector3d brickPos) {
+void CreateBrick(ChSystemNSC& sys, ChVector3d pos, double dimX, double dimY, double dimZ) {
     auto brick_mat = chrono_types::make_shared<ChContactMaterialNSC>();
     auto brick_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
-    auto brick = chrono_types::make_shared<ChBodyEasyBox>(2, 0.1f, 2, 1, true, true, brick_mat);
-    brick->SetPos(brickPos);
+    auto brick = chrono_types::make_shared<ChBodyEasyBox>(dimX, dimY, dimZ, 1, true, true, brick_mat);
+    brick->SetPos(pos);
+    brick->SetFixed(true);
     brick->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
     sys.AddBody(brick);
 }
 
+void CreateBumper(ChSystemNSC& sys, ChVector3d pos, double r, double h) {
+    auto bumper_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+    auto bumper_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
+    auto bumper = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2), r, h, 1, true, true, bumper_mat);
+    bumper->SetPos(pos);
+    bumper->SetFixed(true);
+    bumper->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
+    sys.AddBody(bumper);
+}
+
+void AddFallingItems(ChSystemNSC& sys, double posX) {
+    // Shared contact materials for falling objects
+    auto box_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+    auto cyl_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+
+    // Create falling rigid bodies (spheres and boxes etc.)
+    for (int bi = 0; bi < 59; bi++) {
+        double r = 0.2 * ChRandom::Get();
+        auto cylBody = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2),  //
+            r,
+            2,  // radius, height
+            100,        // density
+            cyl_mat     // contact material
+        );
+        cylBody->SetPos(ChVector3d(posX + double(bi)/5 + r, 0.2, 0));
+        cylBody->SetFixed(true);
+        cylBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
+        sys.Add(cylBody);
+    }
+}
+
 int main(int argc, char* argv[]) {
 
-    bool control = true;
+    bool control = false;
 
     Document config;
     ReadFileJSON("../../sourceFiles/configuration.json", config);
@@ -82,9 +115,29 @@ int main(int argc, char* argv[]) {
 
         MySystem newSystem(config);
         newSystem.AddSystem(sys);
-        newSystem.SetWheelVel(config["Wheel"]["velocity"].GetDouble());
 
-        CreateBrick(sys, ChVector3d(20, 0.2f, 0));
+        CreateBrick(sys, 
+                    ChVector3d(config["Brick1"]["Position"]["x"].GetDouble(),
+                                config["Brick1"]["Position"]["y"].GetDouble(),
+                                config["Brick1"]["Position"]["z"].GetDouble()),
+                    config["Brick1"]["Dimention"]["x"].GetDouble(),
+                    config["Brick1"]["Dimention"]["y"].GetDouble(),
+                    config["Brick1"]["Dimention"]["z"].GetDouble());
+        CreateBrick(sys,
+            ChVector3d(config["Brick2"]["Position"]["x"].GetDouble(),
+                        config["Brick2"]["Position"]["y"].GetDouble(),
+                        config["Brick2"]["Position"]["z"].GetDouble()),
+                    config["Brick2"]["Dimention"]["x"].GetDouble(),
+                    config["Brick2"]["Dimention"]["y"].GetDouble(),
+                    config["Brick2"]["Dimention"]["z"].GetDouble());
+        CreateBumper(sys, 
+                    ChVector3d(config["Bumper"]["Position"]["x"].GetDouble(),
+                                config["Bumper"]["Position"]["y"].GetDouble(),
+                                config["Bumper"]["Position"]["z"].GetDouble()),
+                    config["Bumper"]["Dimention"]["r"].GetDouble(),
+                    config["Bumper"]["Dimention"]["h"].GetDouble());
+
+        AddFallingItems(sys, config["Noize"]["x"].GetDouble());
         
 
         // Add a socket framework object
@@ -93,7 +146,7 @@ int main(int argc, char* argv[]) {
         //// Create the cosimulation interface:
 
         int nInp = 1;
-        int nOut = 2;
+        int nOut = 3;
 
         ChSocketCommunication cosimul_interface(socket_tools,
                                 nInp,   // n.input values from Simulink
@@ -146,6 +199,7 @@ int main(int argc, char* argv[]) {
         vis->AddTypicalLights();
 
         ChRealtimeStepTimer realtime_timer;
+        
 
         double time = 0;
 
@@ -157,7 +211,9 @@ int main(int argc, char* argv[]) {
 
         myfile << "time\tx_pos\tx_vel\tx_angle\tdx_angle\n";
 
-        while (vis->Run()) {
+        while (vis->Run()) 
+        //while (time < 10)
+        {
 
             
             
@@ -167,9 +223,9 @@ int main(int argc, char* argv[]) {
             vis->Render();
             vis->EndScene();
 
-            actCamPosX = newSystem.GetBodyPos().x();
+            //actCamPosX = newSystem.GetBodyPos().x();
 
-            vis->UpdateCamera(ChVector3d(actCamPosX, actCamPosY, actCamPosZ), newSystem.GetBodyPos());
+            //vis->UpdateCamera(ChVector3d(actCamPosX, actCamPosY, actCamPosZ), newSystem.GetBodyPos());
             //tools::drawSpring(vis.get(), 0.3, newSystem.GetBodyPos(), newSystem.GetWheelPos(),
             //                            ChColor(0.59f, 0.08f, 0.08f), 80, 10, true);
 
@@ -181,8 +237,10 @@ int main(int argc, char* argv[]) {
             //data_out(3) = -cart.getBodyVel().x();
             //data_out(2) = -cart.getBodyPos().x();
             //data_out(1) = cart.getSphereAngleDt().z();
-            data_out(0) = newSystem.GetWheelPos().y() - config["Wheel"]["rWheel"].GetDouble();
-            data_out(1) = newSystem.GetBodyPos().y() - config["Wheel"]["rWheel"].GetDouble()- config["SD"]["base"].GetDouble();
+            //data_out(0) = newSystem.GetWheelPos().y() - config["Wheel"]["rWheel"].GetDouble();
+            data_out(0) = newSystem.GetWheelPos().y();
+            data_out(1) = newSystem.GetBodyPos().y()-config["SD"]["base"].GetDouble();
+            data_out(2) = newSystem.GetWheelPos().x();
             std::cout << "--- Y wheelPos: " << data_out(0)
                     << "--- Y bodyPosRel: " << data_out(1)
                      << "--- data_in: " << data_in(0)
