@@ -71,21 +71,21 @@ void CreateBumper(ChSystemNSC& sys, ChVector3d pos, double r, double h) {
     sys.AddBody(bumper);
 }
 
-void AddFallingItems(ChSystemNSC& sys, double posX) {
+void AddRandomCylinders(ChSystemNSC& sys, double posX, double dimMax, double N, double distFactor) {
     // Shared contact materials for falling objects
     auto box_mat = chrono_types::make_shared<ChContactMaterialNSC>();
     auto cyl_mat = chrono_types::make_shared<ChContactMaterialNSC>();
 
     // Create falling rigid bodies (spheres and boxes etc.)
-    for (int bi = 0; bi < 59; bi++) {
-        double r = 0.2 * ChRandom::Get();
+    for (int bi = 0; bi < N; bi++) {
+        double r = dimMax * ChRandom::Get();
         auto cylBody = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2),  //
-            r,
-            2,  // radius, height
-            100,        // density
-            cyl_mat     // contact material
-        );
-        cylBody->SetPos(ChVector3d(posX + double(bi)/5 + r, 0.2, 0));
+                                                                    r,
+                                                                    2,          // radius, height
+                                                                    100,        // density
+                                                                    cyl_mat     // contact material
+                                                                    );
+        cylBody->SetPos(ChVector3d(posX + double(bi)/ distFactor + r, 0.2, 0));
         cylBody->SetFixed(true);
         cylBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
         sys.Add(cylBody);
@@ -137,9 +137,13 @@ int main(int argc, char* argv[]) {
                     config["Bumper"]["Dimention"]["r"].GetDouble(),
                     config["Bumper"]["Dimention"]["h"].GetDouble());
 
-        AddFallingItems(sys, config["Noize"]["x"].GetDouble());
-        
-        control = config["Control"].GetBool();
+        AddRandomCylinders(sys, config["Noize"]["x"].GetDouble(),
+                                config["Noize"]["dimMax"].GetDouble(), 
+                                config["Noize"]["N"].GetDouble(),
+                                config["Noize"]["distFactor"].GetDouble());
+
+        control = config["General"]["Control"].GetBool();
+        double dt = config["General"]["Ts"].GetDouble();
 
         // Add a socket framework object
         ChSocketFramework socket_tools;
@@ -181,7 +185,7 @@ int main(int argc, char* argv[]) {
         //// Here the 'dt' must be the same of the sampling period that is
         //// entered in the CEcosimulation block
 
-        double dt = 0.001;
+
         double actCamPosX = config["Camera"]["x"].GetDouble();
         double actCamPosY = config["Camera"]["y"].GetDouble();
         double actCamPosZ = config["Camera"]["z"].GetDouble();
@@ -210,7 +214,7 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
-        myfile << "time\tx_pos\tx_vel\tx_angle\tdx_angle\n";
+        myfile << "time\tWheel_y_pos\tWheel_x_vel\tBody_x_pos\n";
 
         while (vis->Run()) 
         //while (time < 10)
@@ -250,14 +254,14 @@ int main(int argc, char* argv[]) {
 
             // Spin in place to maintain soft real-time
             //realtime_timer.Spin(dt);
-            //myfile << time;
-            //myfile << '\t';
-            //myfile << data_out(2);
-            //myfile << '\t';
-            //myfile << data_out(3);
-            //myfile << '\n';
-            //myfile << data_out(0);
-            //myfile << '\n';
+            myfile << time;
+            myfile << '\t';
+            myfile << data_out(0);
+            myfile << '\t';
+            myfile << data_out(2);
+            myfile << '\t';
+            myfile << data_out(1);
+            myfile << '\n';
             //myfile << data_out(1);
             //myfile << '\n';
             //myfile << data_in(0);

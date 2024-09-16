@@ -1,5 +1,9 @@
 {
-	"Control": true,
+	"General":{
+		"Control": true, //
+		// "Control": false,				
+		"Ts": 0.001
+	},
 	"Position":{
 		"x": 0.0,
 		"y": 1.2,
@@ -12,25 +16,25 @@
 		"velocity": 0
 	},
 	"Motor":{
-		"Speed": -1.5
+		"Speed": -9
 	},
 
 	"Body":
 	{
 		"xSize": 2.0,
 		"ySize": 1.0,
-		"zSize": 2.0,
-		"density": 0.375, // wc 
-		// "density": 0.25, 	//nominal
+		"zSize": 1.0,
+		// "density": 3, // wc 
+		"density": 2, 	//nominal
 		"velocity": 0
 	},
 
 	"SD":
 	{
-		"spring": 50,	//wc
-		// "spring": 100,	//nominal
-		"damping": 2.5, //wc
-		// "damping": 5,	//nomianl
+		// "spring": 2500,	//wc
+		"spring": 5000,	//nominal
+		// "damping": 25, //wc
+		"damping": 50,	//nomianl
 		"base": 4
 	},
 	"Floor":
@@ -52,19 +56,22 @@
 		},
 	"Brick2":{
 		"Position":{
-			"x": 11.0,
+			// "x": -11.0,
+			"x": -10.0,
 			"y": 0.1,
 			"z": 0.0
 			},
 		"Dimention":{
-			"x": 4.0,
+			// "x": 4.0,
+			"x": 1.0,
 			"y": 0.2,
 			"z": 2.0
 			}
 		},
 	"Bumper":{
 		"Position":{
-			"x": 4.0,
+			// "x": 4.0,
+			"x": -2.0,
 			"y": -0.5,
 			"z": 0.0
 			},
@@ -74,7 +81,11 @@
 			}
 		},
 	"Noize":{
-		"x": 13.0
+		// "x": 13.0,
+		"x": 5.0,
+		"dimMax": 0.01,
+		"N": 1500,
+		"distFactor": 15
 		},
 	"Camera":
 	{

@@ -13,6 +13,8 @@ yBodySize = config.Body.ySize;
 zBodySize = config.Body.zSize;
 bodyDensity = config.Body.density;
 
+Ts = config.General.Ts;
+
 k0 = config.SD.spring;
 c0 = config.SD.damping;
 m0 = xBodySize*yBodySize*zBodySize*bodyDensity;
@@ -32,7 +34,7 @@ m = (1+delta_m)*m0;
 u_system = ss(A,B,C,D);
 omega = sqrt(k.NominalValue/m.NominalValue);  % natural frequency
 
-Ts = 0.001;
+% Ts = 0.001;
 sys_d = c2d(u_system.NominalValue,Ts);
 sys_wc = c2d(worst_case_tf(u_system), Ts);
 %%
@@ -46,7 +48,6 @@ OS = 15;
 [DampRatio, PM, Mt] = OverShoot(OS);
 du = 0.3;
 umax = 2*k0;
-rmax = 5;
 
 %% PID
 
@@ -102,9 +103,9 @@ We.u = 'ry' ; We.y = 'z1';
 % Restrict restrict saturation
 
 Mks = du*umax;                 % actuator constrains
-eps_u = 0.001;                % noize attenuation
+eps_u = 0.001;                 % noize attenuation
 eps_u_2 = 10;
-omega_ru = 50*omega;       % cut freq for controller action
+omega_ru = 100*omega;       % cut freq for controller action
 omega_lu = 0.001*omega;
 n=1;
 Wu_1 = ss((tf([1, omega_ru/Mks^(1/n)],[eps_u^(1/n), omega_ru]))^n);
@@ -112,6 +113,7 @@ Wu_2 = ss(tf([1/Mks, omega_lu],[1,omega_lu*eps_u_2]));
 Wu = Wu_1*Wu_2;
 
 Wu.u = 'u'; Wu.y = 'z2';
+
 
 %% Generalized plant building for LOWER LFT
 
@@ -199,46 +201,46 @@ K_mu_d = c2d(Klow_mu_str, Ts);
 K_hinf_d = c2d(K_inf, Ts);
 
 %%
-figure;
-plot(out.tout, out.simout(:,2), "LineStyle","-", LineWidth=2);
-hold on;
-plot(out.tout, out.simout(:,3)-1,  "LineStyle","--", LineWidth=2);
-grid on;
-legend("MatLAB model", "CHRONO model")
-fontsize(14, 'points');
-title('Nominal Model');
-xlabel("Time, s");
-ylabel("Displacement, m");
+% figure;
+% plot(out.tout, out.simout(:,2), "LineStyle","-", LineWidth=2);
+% hold on;
+% plot(out.tout, out.simout(:,3)-1,  "LineStyle","--", LineWidth=2);
+% grid on;
+% legend("MatLAB model", "CHRONO model")
+% fontsize(14, 'points');
+% title('Nominal Model');
+% xlabel("Time, s");
+% ylabel("Displacement, m");
 
 
 %%simulations
 
 %%
 %%OL
-results.ol = out.simout;
-results.ol_time = out.tout;
+% results.ol = out.simout;
+% results.ol_time = out.tout;
 
 %%
 %PID
-results.pid = out.simout;
-results.pid_time = out.tout;
+% results.pid = out.simout;
+% results.pid_time = out.tout;
 
 %%
 %Kinf
-results.hinf = out.simout;
-results.hinf_time = out.tout;
+% results.hinf = out.simout;
+% results.hinf_time = out.tout;
 
 %%
 %Mu-syn
 
-results.mu = out.simout;
-results.mu_time = out.tout;
+% results.mu = out.simout;
+% results.mu_time = out.tout;
 %% Time
 
-results.time = out.tout;
+% results.time = out.tout;
 %%
 
-save('worstCase_slow', "results");
+% save('worstCase_slow', "results");
 %%
 
 % 
