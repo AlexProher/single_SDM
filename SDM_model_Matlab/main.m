@@ -1,9 +1,9 @@
 clc;
 close all;
 clear all;
-addpath('C:\Users\Aleksandr Prokohrov\Documents\ProkhorovAlex\UGA_INP\internship\MatLabProjects/functions/');
-addpath('C:\Users\Aleksandr Prokohrov\Documents\ProkhorovAlex\UGA_INP\internship\MatLabProjects/synthesis_functions/');
-addpath('C:\Users\Aleksandr Prokohrov\Documents\ProkhorovAlex\UGA_INP\internship\MatLabProjects/plot_figures_files/');
+addpath('supportFiles/');
+addpath('supportFiles/');
+addpath('supportFiles/');
 
 %%
 config = readstruct("../sourceFiles/configuration.json");
