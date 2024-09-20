@@ -1,19 +1,3 @@
-// =============================================================================
-// PROJECT CHRONO - http://projectchrono.org
-//
-// Copyright (c) 2014 projectchrono.org
-// All rights reserved.
-//
-// Use of this source code is governed by a BSD-style license that can be found
-// in the LICENSE file at the top level of the distribution and at
-// http://projectchrono.org/license-chrono.txt.
-//
-// =============================================================================
-// A very simple example that can be used as template project for
-// a Chrono::Engine simulator with 3D view.
-// =============================================================================
-
-
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLinkMate.h"
@@ -29,7 +13,7 @@
 #include "chrono_thirdparty/rapidjson/istreamwrapper.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
-#include "chrono/core/ChRandom.h"
+
 
 // Use the namespace of Chrono
 using namespace chrono;
@@ -51,101 +35,72 @@ void ReadFileJSON(const std::string& filename, Document& d) {
     }
 }
 
-void CreateBrick(ChSystemNSC& sys, ChVector3d pos, double dimX, double dimY, double dimZ) {
-    auto brick_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    auto brick_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
-    auto brick = chrono_types::make_shared<ChBodyEasyBox>(dimX, dimY, dimZ, 1, true, true, brick_mat);
-    brick->SetPos(pos);
-    brick->SetFixed(true);
-    brick->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
-    sys.AddBody(brick);
-}
-
-void CreateBumper(ChSystemNSC& sys, ChVector3d pos, double r, double h) {
-    auto bumper_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    auto bumper_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
-    auto bumper = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2), r, h, 1, true, true, bumper_mat);
-    bumper->SetPos(pos);
-    bumper->SetFixed(true);
-    bumper->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
-    sys.AddBody(bumper);
-}
-
-void AddRandomCylinders(ChSystemNSC& sys, double posX, double dimMax, double N, double distFactor) {
-    // Shared contact materials for falling objects
-    auto box_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-    auto cyl_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-
-    // Create falling rigid bodies (spheres and boxes etc.)
-    for (int bi = 0; bi < N; bi++) {
-        double r = dimMax * ChRandom::Get();
-        auto cylBody = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2),  //
-                                                                    r,
-                                                                    2,          // radius, height
-                                                                    100,        // density
-                                                                    cyl_mat     // contact material
-                                                                    );
-        cylBody->SetPos(ChVector3d(posX + double(bi)/ distFactor + r, 0.2, 0));
-        cylBody->SetFixed(true);
-        cylBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
-        sys.Add(cylBody);
-    }
-}
-
 int main(int argc, char* argv[]) {
 
     bool control = false;
 
     Document config;
     ReadFileJSON("../../sourceFiles/configuration.json", config);
-    //ReadFileJSON("../sourceFiles/configuration.json", config);
+    //ReadFileJSON("../sourceFiles/configuration.json", config);    // in case of Debug
 
-    assert(config.HasMember("Position"));
-    //config.ParseStream(isw);
-    char val;
     try {
 
         ChSystemNSC sys;
-
 
         ChCollisionSystem::Type collision_type = ChCollisionSystem::Type::BULLET;
         sys.SetCollisionSystemType(collision_type);
 
         // Create a Chrono physical system
 
-        MySystem newSystem(config);
+        MySystem newSystem;
+
+        newSystem.BuildConfig(config);
         newSystem.AddSystem(sys);
 
-        CreateBrick(sys, 
+
+        // Add Obstacles in the system
+
+        newSystem.CreateBrick(sys,
                     ChVector3d(config["Brick1"]["Position"]["x"].GetDouble(),
                                 config["Brick1"]["Position"]["y"].GetDouble(),
                                 config["Brick1"]["Position"]["z"].GetDouble()),
-                    config["Brick1"]["Dimention"]["x"].GetDouble(),
-                    config["Brick1"]["Dimention"]["y"].GetDouble(),
-                    config["Brick1"]["Dimention"]["z"].GetDouble());
-        CreateBrick(sys,
-            ChVector3d(config["Brick2"]["Position"]["x"].GetDouble(),
-                        config["Brick2"]["Position"]["y"].GetDouble(),
-                        config["Brick2"]["Position"]["z"].GetDouble()),
-                    config["Brick2"]["Dimention"]["x"].GetDouble(),
-                    config["Brick2"]["Dimention"]["y"].GetDouble(),
-                    config["Brick2"]["Dimention"]["z"].GetDouble());
-        CreateBumper(sys, 
+                            config["Brick1"]["Dimention"]["x"].GetDouble(),
+                            config["Brick1"]["Dimention"]["y"].GetDouble(),
+                            config["Brick1"]["Dimention"]["z"].GetDouble());
+                    
+        newSystem.CreateBrick(sys,
+                    ChVector3d(config["Brick2"]["Position"]["x"].GetDouble(),
+                                config["Brick2"]["Position"]["y"].GetDouble(),
+                                config["Brick2"]["Position"]["z"].GetDouble()),
+                            config["Brick2"]["Dimention"]["x"].GetDouble(),
+                            config["Brick2"]["Dimention"]["y"].GetDouble(),
+                            config["Brick2"]["Dimention"]["z"].GetDouble());
+        newSystem.CreateBumper(sys,
                     ChVector3d(config["Bumper"]["Position"]["x"].GetDouble(),
                                 config["Bumper"]["Position"]["y"].GetDouble(),
                                 config["Bumper"]["Position"]["z"].GetDouble()),
-                    config["Bumper"]["Dimention"]["r"].GetDouble(),
-                    config["Bumper"]["Dimention"]["h"].GetDouble());
+                            config["Bumper"]["Dimention"]["r"].GetDouble(),
+                            config["Bumper"]["Dimention"]["h"].GetDouble());
 
-        AddRandomCylinders(sys, config["Noize"]["x"].GetDouble(),
+        newSystem.AddRandomCylinders(sys, config["Noize"]["x"].GetDouble(),
                                 config["Noize"]["dimMax"].GetDouble(), 
                                 config["Noize"]["N"].GetDouble(),
                                 config["Noize"]["distFactor"].GetDouble());
 
+        // Get parameters for Simulation
+        // Here the 'dt' must be the same of the sampling period that is
+        // entered in the CEcosimulation block
+
         control = config["General"]["Control"].GetBool();
         double dt = config["General"]["Ts"].GetDouble();
 
+        // Get values for camera position wrt to body
+        double actCamPosX = config["Camera"]["x"].GetDouble();
+        double actCamPosY = config["Camera"]["y"].GetDouble();
+        double actCamPosZ = config["Camera"]["z"].GetDouble();
+
         // Add a socket framework object
+
         ChSocketFramework socket_tools;
 
         //// Create the cosimulation interface:
@@ -159,7 +114,7 @@ int main(int argc, char* argv[]) {
 
         if (control) {
 
-            //// 4) Wait client (Simulink) to connect...
+            //// Wait client (Simulink) to connect...
             std::cout << " *** Waiting Simulink to start... ***\n"
                 << "(load 'data/cosimulation/test_cosim_hydraulics.mdl' in Simulink and press Start...)\n"
                 << std::endl;
@@ -168,8 +123,11 @@ int main(int argc, char* argv[]) {
 
             cosimul_interface.WaitConnection(PORT_NUMBER);
         }
+        else {
+            std::cout << "To start press Enter";
+            getchar();
+        }
         
-
         // Prepare the two column vectors of data that will be swapped
         // back and forth between Chrono and Simulink. In detail we will
         // - receive 1 variable from Simulink (the hydraulic cylinder force)
@@ -182,17 +140,9 @@ int main(int argc, char* argv[]) {
         double mytime = 0;
         double histime = 0;
 
-        //// Here the 'dt' must be the same of the sampling period that is
-        //// entered in the CEcosimulation block
-
-
-        double actCamPosX = config["Camera"]["x"].GetDouble();
-        double actCamPosY = config["Camera"]["y"].GetDouble();
-        double actCamPosZ = config["Camera"]["z"].GetDouble();
-
         // Optionally, set color and/or texture for visual assets
 
-        // 4 - Create the Irrlicht visualization system
+        // Create the Irrlicht visualization system
         auto vis = chrono_types::make_shared<ChVisualSystemIrrlicht>();
         vis->AttachSystem(&sys);
         vis->SetWindowSize(800, 600);
@@ -204,7 +154,6 @@ int main(int argc, char* argv[]) {
         vis->AddTypicalLights();
 
         ChRealtimeStepTimer realtime_timer;
-        
 
         double time = 0;
 
@@ -214,10 +163,9 @@ int main(int argc, char* argv[]) {
             return 0;
         }
 
-        myfile << "time\tWheel_y_pos\tWheel_x_vel\tBody_x_pos\n";
+        myfile << "time\tWheelYpos\tWheelXpos\tBodyYpos\tControlOut\n";
 
         while (vis->Run()) 
-        //while (time < 10)
         {
 
             // Render scene
@@ -235,25 +183,18 @@ int main(int argc, char* argv[]) {
             sys.DoStepDynamics(dt);
             time += dt;
 
-
-            //data_out(3) = -cart.getBodyVel().x();
-            //data_out(2) = -cart.getBodyPos().x();
-            //data_out(1) = cart.getSphereAngleDt().z();
-            //data_out(0) = newSystem.GetWheelPos().y() - config["Wheel"]["rWheel"].GetDouble();
             data_out(0) = newSystem.GetWheelPos().y();
             data_out(1) = newSystem.GetBodyPos().y()-config["SD"]["base"].GetDouble();
             data_out(2) = newSystem.GetWheelPos().x();
+
+
+
             std::cout << "--- Y wheelPos: " << data_out(0)
-                    << "--- Y bodyPosRel: " << data_out(1)
-                     << "--- data_in: " << data_in(0)
-                    //<< "--- camPosY: " << vis->GetActiveCamera()->getAbsolutePosition().Y
-                    //<< "--- camPosZ: " << vis->GetActiveCamera()->getAbsolutePosition().Z
-                    << std::endl;
+                        << "--- X wheelPos: " << data_out(2)
+                        << "--- Y bodyPosRel: " << data_out(1)
+                        << "--- Control out: " << data_in(0)
+                        << std::endl;
 
-
-
-            // Spin in place to maintain soft real-time
-            //realtime_timer.Spin(dt);
             myfile << time;
             myfile << '\t';
             myfile << data_out(0);
@@ -261,21 +202,14 @@ int main(int argc, char* argv[]) {
             myfile << data_out(2);
             myfile << '\t';
             myfile << data_out(1);
+            myfile << '\t';
+            myfile << data_in(0);
             myfile << '\n';
-            //myfile << data_out(1);
-            //myfile << '\n';
-            //myfile << data_in(0);
 
             if (control) {
-                // std::cout << "Send" << std::endl;
-                cosimul_interface.SendData(time, data_out);  // --> to Simulink
-                // std::cout << "Receive" << std::endl;
-                cosimul_interface.ReceiveData(histime, data_in);  // <-- from Simulink
-                //newSystem.SetWheelPos(ChVector3d(newSystem.GetWheelPos().x(),
-                //                                newSystem.GetWheelPos().y() + data_in(0),
-                //                                newSystem.GetWheelPos().z()));
-                newSystem.UpdateActForce(data_in(0));
-                //std::cout << "--- time: " << time << std::endl;
+                cosimul_interface.SendData(time, data_out);         // --> to Simulink
+                cosimul_interface.ReceiveData(histime, data_in);    // <-- from Simulink
+                newSystem.UpdateActForce(data_in(0));               // Apply Force to Suspension
             }
 
         }
@@ -287,7 +221,7 @@ int main(int argc, char* argv[]) {
 
     }
 
-    std::cout << "Press any key";
-    std::cin >> val;
+    std::cout << "To finish press Enter";;
+    getchar();
     return 0;
 }

@@ -201,46 +201,46 @@ K_mu_d = c2d(Klow_mu_str, Ts);
 K_hinf_d = c2d(K_inf, Ts);
 
 %%
-% figure;
-% plot(out.tout, out.simout(:,2), "LineStyle","-", LineWidth=2);
-% hold on;
-% plot(out.tout, out.simout(:,3)-1,  "LineStyle","--", LineWidth=2);
-% grid on;
-% legend("MatLAB model", "CHRONO model")
-% fontsize(14, 'points');
-% title('Nominal Model');
-% xlabel("Time, s");
-% ylabel("Displacement, m");
+figure;
+plot(out.tout, out.simout(:,2), "LineStyle","-", LineWidth=2);
+hold on;
+plot(out.tout, out.simout(:,3)-0.2,  "LineStyle","--", LineWidth=2);
+grid on;
+legend("MatLAB model", "CHRONO model")
+fontsize(14, 'points');
+title('Worst Case Gain Model');
+xlabel("Time, s");
+ylabel("Displacement, m");
 
 
 %%simulations
 
 %%
 %%OL
-% results.ol = out.simout;
-% results.ol_time = out.tout;
+results.ol = out.simout;
+results.ol_time = out.tout;
 
 %%
 %PID
-% results.pid = out.simout;
-% results.pid_time = out.tout;
+results.pid = out.simout;
+results.pid_time = out.tout;
 
 %%
 %Kinf
-% results.hinf = out.simout;
-% results.hinf_time = out.tout;
+results.hinf = out.simout;
+results.hinf_time = out.tout;
 
 %%
 %Mu-syn
 
-% results.mu = out.simout;
-% results.mu_time = out.tout;
+results.mu = out.simout;
+results.mu_time = out.tout;
 %% Time
 
-% results.time = out.tout;
+results.time = out.tout;
 %%
-
-% save('worstCase_slow', "results");
+% save('nominal_exp2_noise', "results");
+save('wc_exp2_noise', "results");
 %%
 
 % 

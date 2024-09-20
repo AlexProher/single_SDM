@@ -1,7 +1,8 @@
 {
 	"General":{
-		"Control": true, //
-		// "Control": false,				
+		"Control": false,
+		// "Control": true,	
+		"WorstGainCaseMode": true,			
 		"Ts": 0.001
 	},
 	"Position":{
@@ -16,7 +17,7 @@
 		"velocity": 0
 	},
 	"Motor":{
-		"Speed": -9
+		"Speed": -8
 	},
 
 	"Body":
@@ -24,17 +25,17 @@
 		"xSize": 2.0,
 		"ySize": 1.0,
 		"zSize": 1.0,
-		// "density": 3, // wc 
-		"density": 2, 	//nominal
+		"density_wc": 3, // wc
+ 		"density_nominal": 2, 	//nominal
 		"velocity": 0
 	},
 
 	"SD":
 	{
-		// "spring": 2500,	//wc
-		"spring": 5000,	//nominal
-		// "damping": 25, //wc
-		"damping": 50,	//nomianl
+		"spring_wc": 2500,	//wc
+		"spring_nominal": 5000,	//nominal
+		"damping_wc": 25, //wc
+		"damping_nominal": 50,	//nomianl
 		"base": 4
 	},
 	"Floor":
@@ -49,21 +50,21 @@
 			"z": 0.0
 			},
 		"Dimention":{
-			"x": 13.0,
+			"x": 15.0,
 			"y": 0.2,
 			"z": 2.0
 			}
 		},
 	"Brick2":{
 		"Position":{
-			// "x": -11.0,
+			// "x": 16.0,
 			"x": -10.0,
 			"y": 0.1,
 			"z": 0.0
 			},
 		"Dimention":{
 			// "x": 4.0,
-			"x": 1.0,
+			"x": 6.0,
 			"y": 0.2,
 			"z": 2.0
 			}
@@ -81,7 +82,7 @@
 			}
 		},
 	"Noize":{
-		// "x": 13.0,
+		// "x": 18.0,
 		"x": 5.0,
 		"dimMax": 0.01,
 		"N": 1500,

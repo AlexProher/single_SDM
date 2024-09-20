@@ -1,6 +1,6 @@
 %%
-% load('nominal_slow.mat', 'results');
-load('worstCase_slow.mat', 'results');
+% load('nominal_exp2_noise.mat', 'results');
+load('wc_exp2_noise.mat', 'results');
 
 %%
 figure;
@@ -19,7 +19,7 @@ fontsize(14, 'points');
 title("WorstCase Model Wheel Vertical Displacement")
 xlabel("Time, s");
 ylabel("Displacement, m");
-xlim([2,17]);
+xlim([1,10]);
 
 subplot(3,1,2);
 
@@ -35,14 +35,14 @@ title("WorstCase Model Body Vertical Displacement")
 % title("Nomianl Model Body Vertical Displacement")
 xlabel("Time, s");
 ylabel("Displacement, m");
-xlim([2,17]);
+xlim([1,10]);
 
 subplot(3,1,3);
 
-plot(results.pid_time, results.pid(:,3)+10,  "LineStyle","--", LineWidth=2);
+plot(results.pid_time, results.pid(:,3)+500,  "LineStyle","--", LineWidth=2);
 hold on;
-plot(results.hinf_time, results.hinf(:,3)+10,  "LineStyle","-.", LineWidth=2);
-plot(results.mu_time, results.mu(:,3)+10,  "LineStyle",":", LineWidth=2);
+plot(results.hinf_time, results.hinf(:,3)+500,  "LineStyle","-.", LineWidth=2);
+plot(results.mu_time, results.mu(:,3)+500,  "LineStyle",":", LineWidth=2);
 grid on;
 % legend("PID", "Hinf", "mu-synth")
 fontsize(14, 'points');
@@ -50,14 +50,42 @@ title("WorstCase Model Controller Out")
 % title("Nomianl Wheel Controller Out")
 xlabel("Time, s");
 ylabel("Force, N");
-xlim([2,17]);
+xlim([1,10]);
 
 %%
 metrics = struct();
-ce.pid = trapz(results.pid_time, (results.pid(:, 3)+20).^2);
-ce.hinf = trapz(results.hinf_time, (results.hinf(:, 3)+20).^2);
-ce.mu = trapz(results.mu_time, (results.mu(:, 3)+20).^2);
+ce.pid = trapz(results.pid_time, (results.pid(:, 3)+500).^2);
+ce.hinf = trapz(results.hinf_time, (results.hinf(:, 3)+500).^2);
+ce.mu = trapz(results.mu_time, (results.mu(:, 3)+500).^2);
 
 iae.pid = sum(abs(results.pid(:,2)));
 iae.hinf = sum(abs(results.hinf(:,2)));
 iae.mu = sum(abs(results.mu(:,2)));
+
+%%
+
+X = results.ol(:,1)-1.2;
+figure;
+plot(results.ol_time, results.ol(:,1)-1.2)
+
+
+
+
+T = 0.001;
+Fs = 1/T;            % Sampling frequency                        
+L = size(results.pid_time,1);             % Length of signal
+t = (0:L-1)*T;        % Time vector
+Y = fft(X);
+
+P2 = abs(Y/L);
+P1 = P2(1:L/2+1);
+P1(2:end-1) = 2*P1(2:end-1);
+
+f = 2*pi*Fs/L*(0:(L/2));
+figure;
+semilogx(f,P1,"LineWidth",3) 
+% title("Single-Sided Amplitude Spectrum of X(t)")
+xlabel("Frequency (rad/s)")
+ylabel("|P1(f)|")
+grid on
+fontsize(14, 'points');

@@ -7,6 +7,7 @@
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/collision/bullet/ChCollisionUtilsBullet.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
+#include "chrono/core/ChRandom.h"
 #include "MySystem.h"
 
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
@@ -15,66 +16,90 @@
 using namespace chrono;
 using namespace rapidjson;
 
-MySystem::MySystem(Document& config) {
+MySystem::MySystem() {
 
-	std::cout << "Create MySystem\n";
+};
 
-	xPos = config["Position"]["x"].GetDouble();
-	yPos = config["Position"]["y"].GetDouble();
-	zPos = config["Position"]["z"].GetDouble();
-	
-	if (config.HasMember("Wheel")) {
-		rWheelDim = config["Wheel"]["rWheel"].GetDouble();
-		std::cout << "r Wheel size - " << rWheelDim << "\n";
+void MySystem::BuildConfig(Document& configFile) {
+	std::cout << "1-DOF Sprung Mass with Damper Simulation\n";
+	std::cout << "\n";
 
-		hWheelDim = config["Wheel"]["hWheel"].GetDouble();
-		std::cout << "h Wheel size - " << hWheelDim << "\n";
+	xPos = configFile["Position"]["x"].GetDouble();
+	yPos = configFile["Position"]["y"].GetDouble();
+	zPos = configFile["Position"]["z"].GetDouble();
 
-		wheelDensity = config["Wheel"]["density"].GetDouble();
+	wcGainMode = configFile["General"]["WorstGainCaseMode"].GetBool();
+	if (wcGainMode) {
+		std::cout << "WORST CASE GAIN MODE" << "\n" << "\n";
+	}
+	else {
+		std::cout << "NOMINAL MODEL MODE" << "\n" << "\n";
 	}
 
-	if (config.HasMember("Motor")) {
-		motorRotation = config["Motor"]["Speed"].GetDouble();
-		std::cout << "Motor speed - " << motorRotation << "\n";
+	if (configFile.HasMember("Wheel")) {
+		rWheelDim = configFile["Wheel"]["rWheel"].GetDouble();
+		std::cout << "r Wheel size - " << rWheelDim << " m" << "\n";
+
+		hWheelDim = configFile["Wheel"]["hWheel"].GetDouble();
+		std::cout << "h Wheel size - " << hWheelDim << " m" << "\n";
+		wheelDensity = configFile["Wheel"]["density"].GetDouble();
+	}
+
+	if (configFile.HasMember("Motor")) {
+		motorRotation = configFile["Motor"]["Speed"].GetDouble();
+		std::cout << "Motor speed - " << motorRotation << " rad/s" << "\n" << "\n";
 	}
 	motorFunction = chrono_types::make_shared<ChFunctionConst>(motorRotation);
 
-	if (config.HasMember("Floor")) {
-		xFloorDim = config["Floor"]["x"].GetDouble();
-		std::cout << "x Floor size - " << xFloorDim << "\n";
+	if (configFile.HasMember("Floor")) {
+		xFloorDim = configFile["Floor"]["x"].GetDouble();
+		std::cout << "x Floor size - " << xFloorDim << " m" << "\n";
 
-		yFloorDim = config["Floor"]["z"].GetDouble();
-		std::cout << "y Floor size - " << xFloorDim << "\n";
+		yFloorDim = configFile["Floor"]["z"].GetDouble();
+		std::cout << "y Floor size - " << xFloorDim << " m" << "\n";
 
-		zFloorDim = config["Floor"]["z"].GetDouble();
-		std::cout << "z Floor size - " << xFloorDim << "\n";
+		zFloorDim = configFile["Floor"]["z"].GetDouble();
+		std::cout << "z Floor size - " << xFloorDim << " m" << "\n" << "\n";
 	}
 
-	if (config.HasMember("Body")) {
-		xDim = config["Body"]["xSize"].GetDouble();
-		std::cout << "x body size - " << xDim << "\n";
+	if (configFile.HasMember("Body")) {
+		xDim = configFile["Body"]["xSize"].GetDouble();
+		std::cout << "x body size - " << xDim << " m" << "\n";
 
-		yDim = config["Body"]["ySize"].GetDouble();
-		std::cout << "y body size - " << yDim << "\n";
+		yDim = configFile["Body"]["ySize"].GetDouble();
+		std::cout << "y body size - " << yDim << " m" << "\n";
 
-		zDim = config["Body"]["zSize"].GetDouble();
-		std::cout << "z body size - " << zDim << "\n";
-
-		bodyDensity = config["Body"]["density"].GetDouble();
+		zDim = configFile["Body"]["zSize"].GetDouble();
+		std::cout << "z body size - " << zDim << " m" << "\n";
+		if (wcGainMode) {
+			bodyDensity = configFile["Body"]["density_wc"].GetDouble();
+		}
+		else {
+			bodyDensity = configFile["Body"]["density_nominal"].GetDouble();
+		}
+		std::cout << "body density - " << bodyDensity << " kg/m3" << "\n" << "\n";
 	}
 
-	if (config.HasMember("SD")) {
-		spring = config["SD"]["spring"].GetDouble();
-		std::cout << "spring - " << spring << "\n";
+	if (configFile.HasMember("SD")) {
+		if (wcGainMode) {
+			spring = configFile["SD"]["spring_wc"].GetDouble();
+		}
+		else {
+			spring = configFile["SD"]["spring_nominal"].GetDouble();
+		}
+		std::cout << "spring - " << spring << " N/m" << "\n";
+		if (wcGainMode) {
+			damping = configFile["SD"]["damping_wc"].GetDouble();
+		}
+		else {
+			damping = configFile["SD"]["damping_nominal"].GetDouble();
+		}
+		std::cout << "damping - " << damping << " Ns/m" << "\n";
 
-		damping = config["SD"]["damping"].GetDouble();
-		std::cout << "damping - " << damping << "\n";
-
-		suspBase = config["SD"]["base"].GetDouble();
-		std::cout << "base - " << suspBase << "\n";
+		suspBase = configFile["SD"]["base"].GetDouble();
+		std::cout << "base - " << suspBase << " m" << "\n" << "\n";
 	}
-
-};
+}
 
 void MySystem::CreateFloor() {
 	auto floor_mat = chrono_types::make_shared<ChContactMaterialNSC>();
@@ -132,8 +157,49 @@ void MySystem::LinkSuspention() {
 	suspentionLink->SetSpringCoefficient(spring);
 	suspentionLink->SetRestLength(suspBase-rWheelDim);
 	suspentionLink->SetDampingCoefficient(damping);
-	//suspentionLink->SetActuatorForce(-actForce*body->GetMass());
 	suspentionLink->SetActuatorForce(0);
+}
+
+
+void MySystem::CreateBrick(ChSystemNSC& sys, ChVector3d pos, double dimX, double dimY, double dimZ) {
+
+	auto brick_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+	auto brick_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
+	auto brick = chrono_types::make_shared<ChBodyEasyBox>(dimX, dimY, dimZ, 1, true, true, brick_mat);
+	brick->SetPos(pos);
+	brick->SetFixed(true);
+	brick->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
+	sys.AddBody(brick);
+}
+
+void MySystem::CreateBumper(ChSystemNSC& sys, ChVector3d pos, double r, double h) {
+	auto bumper_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+	auto bumper_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
+	auto bumper = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2), r, h, 1, true, true, bumper_mat);
+	bumper->SetPos(pos);
+	bumper->SetFixed(true);
+	bumper->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
+	sys.AddBody(bumper);
+}
+
+void MySystem::AddRandomCylinders(ChSystemNSC& sys, double posX, double dimMax, double N, double distFactor) {
+	auto box_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+	auto cyl_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+
+	// Create falling rigid bodies (spheres and boxes etc.)
+	for (int bi = 0; bi < N; bi++) {
+		double r = dimMax * ChRandom::Get();
+		auto cylBody = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2),  //
+			r,
+			2,          // radius, height
+			100,        // density
+			cyl_mat     // contact material
+		);
+		cylBody->SetPos(ChVector3d(posX + double(bi) / distFactor + r, 0.2, 0));
+		cylBody->SetFixed(true);
+		cylBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
+		sys.Add(cylBody);
+	}
 }
 
 ChVector3d MySystem::GetBodyPos() {
@@ -182,6 +248,7 @@ ChVector3d MySystem::getWheelContactForce() {
 
 void MySystem::AddSystem(ChSystemNSC& sys) {
 	CreateFloor();
+
 	sys.AddBody(floor);
 
 	CreateWheel();

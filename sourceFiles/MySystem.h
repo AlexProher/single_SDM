@@ -17,6 +17,8 @@ private:
 	double yPos;
 	double zPos;
 
+	double wcGainMode = false;
+
 	double actForce = 9.8f;
 
 	ChSystemNSC system;
@@ -59,7 +61,9 @@ private:
 
 public:
 
-	MySystem(Document&);
+	MySystem();
+
+	void BuildConfig(Document&);
 	void AddSystem(ChSystemNSC&);
 
 	void CreateFloor();
@@ -67,6 +71,10 @@ public:
 	void CreateWheel();
 
 	void CreateBody();
+
+	void CreateBrick(ChSystemNSC&, ChVector3d, double, double, double);
+	void CreateBumper(ChSystemNSC&, ChVector3d, double, double);
+	void AddRandomCylinders(ChSystemNSC&, double, double, double, double);
 
 	ChVector3d GetBodyPos();
 
