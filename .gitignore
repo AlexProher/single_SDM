@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.mat
 
 # Precompiled Headers
 *.gch
@@ -30,6 +31,9 @@
 *.exe
 *.out
 *.app
+
+#dataFiles
+*.txt
 
 # folders
 /build

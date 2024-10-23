@@ -1,5 +1,5 @@
 
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/collision/ChCollisionShapeBox.h"
 #include "chrono/physics/ChLinkMate.h"
@@ -43,6 +43,15 @@ void MySystem::BuildConfig(Document& configFile) {
 		hWheelDim = configFile["Wheel"]["hWheel"].GetDouble();
 		std::cout << "h Wheel size - " << hWheelDim << " m" << "\n";
 		wheelDensity = configFile["Wheel"]["density"].GetDouble();
+
+		isFixed = configFile["Wheel"]["isFixed"].GetBool();
+		std::cout << "Wheel is fixed - " << isFixed << "\n";
+
+		wheelYoungMod = configFile["Wheel"]["YoungModulus"].GetDouble();
+		std::cout << "Wheel Young Modulus - " << wheelYoungMod << "\n";
+
+		wheelDamping = configFile["Wheel"]["damping"].GetDouble();
+		std::cout << "Wheel damping - " << wheelDamping << "\n";
 	}
 
 	if (configFile.HasMember("Motor")) {
@@ -60,6 +69,12 @@ void MySystem::BuildConfig(Document& configFile) {
 
 		zFloorDim = configFile["Floor"]["z"].GetDouble();
 		std::cout << "z Floor size - " << xFloorDim << " m" << "\n" << "\n";
+
+		floorDensity = configFile["Floor"]["density"].GetDouble();
+		std::cout << "Floor density - " << floorDensity << " m" << "\n" << "\n";
+
+		floorYoungMod = configFile["Floor"]["YoungModulus"].GetDouble();
+		std::cout << "floor Young Modulus - " << floorYoungMod << " m" << "\n" << "\n";
 	}
 
 	if (configFile.HasMember("Body")) {
@@ -102,9 +117,10 @@ void MySystem::BuildConfig(Document& configFile) {
 }
 
 void MySystem::CreateFloor() {
-	auto floor_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+	auto floor_mat = chrono_types::make_shared<ChContactMaterialSMC>();
+	floor_mat->SetYoungModulus(floorYoungMod);
 	auto floor_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
-	floor = chrono_types::make_shared<ChBodyEasyBox>(xFloorDim, yFloorDim, zFloorDim, 1, true, true, floor_mat);
+	floor = chrono_types::make_shared<ChBodyEasyBox>(xFloorDim, yFloorDim, zFloorDim, floorDensity, true, true, floor_mat);
 	floor->SetPos(ChVector3d(0, -yFloorDim/2, 0));
 	floor->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/bluewhite.png"), 100, 100);
 	floor->SetFixed(true);
@@ -112,21 +128,22 @@ void MySystem::CreateFloor() {
 
 void MySystem::CreateWheel() {
 
-	auto wheel_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+	auto wheel_mat = chrono_types::make_shared<ChContactMaterialSMC>();
 	auto wheel_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
-
+	wheel_mat->SetYoungModulus(wheelYoungMod);
+	wheel_mat->SetGn(wheelDamping);
 	wheel = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2), rWheelDim, hWheelDim, wheelDensity, wheel_mat);
 	wheel->SetPos(ChVector3d(xPos, yPos, zPos));
 	wheel->EnableCollision(true);
 	wheel->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
 
-	//wheel->SetFixed(true);
+	wheel->SetFixed(isFixed);
 	axis = chrono_types::make_shared<ChBody>();
 	axis->SetPos(ChVector3d(xPos, yPos, zPos));
 }
 
 void MySystem::CreateBody() {
-	auto body_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+	auto body_mat = chrono_types::make_shared<ChContactMaterialSMC>();
 	auto body_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
 	body = chrono_types::make_shared<ChBodyEasyBox>(xDim, yDim, zDim, bodyDensity, true, true, body_mat);
 	body->SetPos(ChVector3d(xPos, yPos + suspBase - rWheelDim, zPos));
@@ -161,30 +178,32 @@ void MySystem::LinkSuspention() {
 }
 
 
-void MySystem::CreateBrick(ChSystemNSC& sys, ChVector3d pos, double dimX, double dimY, double dimZ) {
+void MySystem::CreateBrick(ChSystemSMC& sys, ChVector3d pos, double dimX, double dimY, double dimZ, double density, double YoungMod) {
 
-	auto brick_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+	auto brick_mat = chrono_types::make_shared<ChContactMaterialSMC>();
+	brick_mat->SetYoungModulus(YoungMod);
 	auto brick_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
-	auto brick = chrono_types::make_shared<ChBodyEasyBox>(dimX, dimY, dimZ, 1, true, true, brick_mat);
+	auto brick = chrono_types::make_shared<ChBodyEasyBox>(dimX, dimY, dimZ, density, true, true, brick_mat);
 	brick->SetPos(pos);
 	brick->SetFixed(true);
 	brick->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
 	sys.AddBody(brick);
 }
 
-void MySystem::CreateBumper(ChSystemNSC& sys, ChVector3d pos, double r, double h) {
-	auto bumper_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+void MySystem::CreateBumper(ChSystemSMC& sys, ChVector3d pos, double r, double h, double density, double YoungMod) {
+	auto bumper_mat = chrono_types::make_shared<ChContactMaterialSMC>();
+	bumper_mat->SetYoungModulus(YoungMod);
 	auto bumper_vis_mat = chrono_types::make_shared<ChVisualMaterial>();
-	auto bumper = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2), r, h, 1, true, true, bumper_mat);
+	auto bumper = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2), r, h, density, true, true, bumper_mat);
 	bumper->SetPos(pos);
 	bumper->SetFixed(true);
 	bumper->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
 	sys.AddBody(bumper);
 }
 
-void MySystem::AddRandomCylinders(ChSystemNSC& sys, double posX, double dimMax, double N, double distFactor) {
-	auto box_mat = chrono_types::make_shared<ChContactMaterialNSC>();
-	auto cyl_mat = chrono_types::make_shared<ChContactMaterialNSC>();
+void MySystem::AddRandomCylinders(ChSystemSMC& sys, double posX, double posY, double dimMax, double N, double distFactor, double density, double YoungMod) {
+	auto cyl_mat = chrono_types::make_shared<ChContactMaterialSMC>();
+	cyl_mat->SetYoungModulus(YoungMod);
 
 	// Create falling rigid bodies (spheres and boxes etc.)
 	for (int bi = 0; bi < N; bi++) {
@@ -192,10 +211,10 @@ void MySystem::AddRandomCylinders(ChSystemNSC& sys, double posX, double dimMax, 
 		auto cylBody = chrono_types::make_shared<ChBodyEasyCylinder>(ChAxis(2),  //
 			r,
 			2,          // radius, height
-			100,        // density
+			density,        // density
 			cyl_mat     // contact material
 		);
-		cylBody->SetPos(ChVector3d(posX + double(bi) / distFactor + r, 0.2, 0));
+		cylBody->SetPos(ChVector3d(posX + double(bi) / distFactor + r, posY, 0));
 		cylBody->SetFixed(true);
 		cylBody->GetVisualShape(0)->SetTexture(GetChronoDataFile("textures/redwhite.png"));
 		sys.Add(cylBody);
@@ -226,8 +245,10 @@ void MySystem::SetWheelPos(ChVector3d pos) {
 	return wheel->SetPos(pos);
 }
 
-void MySystem::SetWheelVel(double xVel) {
-	wheel->SetLinVel(ChVector3d(xVel, 0, 0));
+void MySystem::SetWheelVel(double factor) {
+	//motorFunction = chrono_types::make_shared<ChFunctionConst>(motorRotation*factor);
+	motorFunction->SetConstant(motorRotation * factor);
+	motor->SetSpeedFunction(motorFunction);
 }
 
 void MySystem::UpdateActForce(double controlForce) {
@@ -246,7 +267,7 @@ ChVector3d MySystem::getWheelContactForce() {
 	return wheel->GetContactForce();
 }
 
-void MySystem::AddSystem(ChSystemNSC& sys) {
+void MySystem::AddSystem(ChSystemSMC& sys) {
 	CreateFloor();
 
 	sys.AddBody(floor);

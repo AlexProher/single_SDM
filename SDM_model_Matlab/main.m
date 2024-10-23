@@ -11,12 +11,12 @@ config = readstruct("../sourceFiles/configuration.json");
 xBodySize = config.Body.xSize;
 yBodySize = config.Body.ySize;
 zBodySize = config.Body.zSize;
-bodyDensity = config.Body.density;
+bodyDensity = config.Body.density_nominal;
 
 Ts = config.General.Ts;
 
-k0 = config.SD.spring;
-c0 = config.SD.damping;
+k0 = config.SD.spring_nominal;
+c0 = config.SD.damping_nominal;
 m0 = xBodySize*yBodySize*zBodySize*bodyDensity;
 
 delta_k = 1;
@@ -52,8 +52,11 @@ umax = 2*k0;
 %% PID
 
 [S_pid, T_pid, SG_pid, KS_pid, PID_tf] = PID_synth_by_Mt(u_system, Mt, PM);
-figure
-step(T_pid);
+
+plot_step_response(S_pid, T_pid, SG_pid, KS_pid, 'H inf CL system');
+%% Bode diag for Kinf system
+w=logspace(-3,3,500); %% to be adjusted
+plot_sens_analysis(S_pid,T_pid,SG_pid,KS_pid, w)
 
 PID_d = c2d(PID_tf,Ts);
 
@@ -84,28 +87,30 @@ Wt.u = 'x' ; Wt.y = 'z3';
 Ms = 2;                     % Modulus margin 0.5
 eps_x = 1e-4;               % Steady state error 0.001
 omega_x = omega;              % CL bandwidth, where S cross 0db
-omega_rx = 1.2*omega_x;
-omega_lx = 0.5*omega_x;
+omega_rx = 1*omega_x;
+omega_lx = 0.75*omega_x;
 
 n=1;
 
 We_1 = ss(tf([1/Ms^(1/n), omega_lx],[1,omega_lx*eps_x^(1/n)])^(n)); % _/
 
-We_2 = ss(tf([1,omega_x],[1,4,omega_x*omega_x])); % \/
+We_2 = ss(tf([1,omega_x],[1,20,omega_x*omega_x])); % \/
 
 We_3 = ss(tf([1, omega_rx],1)); %-\
 We = We_2*We_1*We_3;
 
 We.u = 'ry' ; We.y = 'z1';
 
+figure;
+bode(1/We)
 %% Weighting function for controller performance
 % Allows to restrict controller action on high freq region
 % Restrict restrict saturation
 
-Mks = du*umax;                 % actuator constrains
+Mks = 0.2*umax;                 % actuator constrains
 eps_u = 0.001;                 % noize attenuation
 eps_u_2 = 10;
-omega_ru = 100*omega;       % cut freq for controller action
+omega_ru = 200*omega;       % cut freq for controller action
 omega_lu = 0.001*omega;
 n=1;
 Wu_1 = ss((tf([1, omega_ru/Mks^(1/n)],[eps_u^(1/n), omega_ru]))^n);
@@ -113,6 +118,9 @@ Wu_2 = ss(tf([1/Mks, omega_lu],[1,omega_lu*eps_u_2]));
 Wu = Wu_1*Wu_2;
 
 Wu.u = 'u'; Wu.y = 'z2';
+
+figure
+bodemag(1/Wu);
 
 
 %% Generalized plant building for LOWER LFT
@@ -201,16 +209,16 @@ K_mu_d = c2d(Klow_mu_str, Ts);
 K_hinf_d = c2d(K_inf, Ts);
 
 %%
-figure;
-plot(out.tout, out.simout(:,2), "LineStyle","-", LineWidth=2);
-hold on;
-plot(out.tout, out.simout(:,3)-0.2,  "LineStyle","--", LineWidth=2);
-grid on;
-legend("MatLAB model", "CHRONO model")
-fontsize(14, 'points');
-title('Worst Case Gain Model');
-xlabel("Time, s");
-ylabel("Displacement, m");
+% figure;
+% plot(out.tout, out.simout(:,2), "LineStyle","-", LineWidth=2);
+% hold on;
+% plot(out.tout, out.simout(:,3)-0.2,  "LineStyle","--", LineWidth=2);
+% grid on;
+% legend("MatLAB model", "CHRONO model")
+% fontsize(14, 'points');
+% title('Worst Case Gain Model');
+% xlabel("Time, s");
+% ylabel("Displacement, m");
 
 
 %%simulations
@@ -239,8 +247,8 @@ results.mu_time = out.tout;
 
 results.time = out.tout;
 %%
-% save('nominal_exp2_noise', "results");
-save('wc_exp2_noise', "results");
+save('wc_exp4_noizeHF', "results");
+% save('wc_exp4_noize.mat', "results");
 %%
 
 % 

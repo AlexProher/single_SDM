@@ -1,6 +1,6 @@
 #pragma once
 
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
@@ -21,7 +21,7 @@ private:
 
 	double actForce = 9.8f;
 
-	ChSystemNSC system;
+	ChSystemSMC system;
 
 	double damping;
 	double spring;
@@ -34,6 +34,8 @@ private:
 	std::shared_ptr<ChLinkMotorRotationSpeed> motor;
 	std::shared_ptr<ChFunctionConst> motorFunction;
 	double motorRotation = -2;
+	double motorAcc = 2;
+
 
 	std::shared_ptr<ChForce> frcY = chrono_types::make_shared<ChForce>();
 	std::shared_ptr<ChForce> frcX = chrono_types::make_shared<ChForce>();
@@ -45,12 +47,17 @@ private:
 	double zDim = 1;
 
 	double wheelDensity = 1000;
+	double wheelYoungMod = 1e6;
+	double wheelDamping = 1e3;
 	double hWheelDim = 1;
 	double rWheelDim = 1;
+	bool isFixed = false;
 
 	double xFloorDim = 10;
 	double yFloorDim = 10;
 	double zFloorDim = 10;
+	double floorYoungMod = 1e8;
+	double floorDensity = 1e4;
 
 	double suspBase = 3;
 
@@ -64,7 +71,7 @@ public:
 	MySystem();
 
 	void BuildConfig(Document&);
-	void AddSystem(ChSystemNSC&);
+	void AddSystem(ChSystemSMC&);
 
 	void CreateFloor();
 
@@ -72,9 +79,9 @@ public:
 
 	void CreateBody();
 
-	void CreateBrick(ChSystemNSC&, ChVector3d, double, double, double);
-	void CreateBumper(ChSystemNSC&, ChVector3d, double, double);
-	void AddRandomCylinders(ChSystemNSC&, double, double, double, double);
+	void CreateBrick(ChSystemSMC&, ChVector3d, double, double, double, double, double);
+	void CreateBumper(ChSystemSMC&, ChVector3d, double, double, double, double);
+	void AddRandomCylinders(ChSystemSMC&, double, double, double, double, double, double, double);
 
 	ChVector3d GetBodyPos();
 

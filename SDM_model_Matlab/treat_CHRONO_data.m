@@ -4,9 +4,9 @@ size(A.data)
 %%
 
 start_idx = 10;
-end_idx = 10000;
+end_idx = 7000;
 
-X = A.data(start_idx:end_idx,4) - 1.25;
+X = A.data(start_idx:end_idx,4) - 0.2;
 figure;
 plot(A.data(1:end_idx,1), A.data(1:end_idx,2))
 
@@ -27,7 +27,7 @@ P1(2:end-1) = 2*P1(2:end-1);
 
 f = Fs/L*(0:(L/2));
 figure;
-semilogx(f,P1,"LineWidth",3) 
+semilogx(f*2*pi,P1,"LineWidth",3) 
 title("Single-Sided Amplitude Spectrum of X(t)")
-xlabel("f (Hz)")
+xlabel("f (rad/s)")
 ylabel("|P1(f)|")

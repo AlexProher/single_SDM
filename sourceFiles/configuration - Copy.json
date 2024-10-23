@@ -1,8 +1,8 @@
 {
 	"General":{
-		"Control": true,
+		"Control": false,
 		// "Control": true,	
-		"WorstGainCaseMode": true,			
+		"WorstGainCaseMode": false,			
 		"Ts": 0.001,
 		"StartDelay": 1
 	},
@@ -16,11 +16,11 @@
 		"hWheel": 1,
 		"density": 50.0,
 		"isFixed": false,
-		"YoungModulus": 5e6,
+		"YoungModulus": 5e5,
 		"damping": 1e3
 	},
 	"Motor":{
-		"Speed": -15
+		"Speed": -8
 		// "Speed": -8
 
 	},
@@ -68,14 +68,14 @@
 		},
 	"Brick2":{
 		"Position":{
-			// "x": 16.0,
-			"x": -10.0,
+			"x": 16.0,
+			// "x": -10.0,
 			"y": 0.05,
 			"z": 0.0
 			},
 		"Dimention":{
-			// "x": 4.0,
-			"x": 6.0,
+			"x": 4.0,
+			// "x": 6.0,
 			"y": 0.1,
 			"z": 2.0
 			},
@@ -86,8 +86,8 @@
 		},
 	"Bumper":{
 		"Position":{
-			// "x": 4.0,
-			"x": -2.0,
+			"x": 4.0,
+			// "x": -2.0,
 			"y": -0.8,
 			"z": 0.0
 			},
@@ -101,16 +101,15 @@
 			}
 		},
 	"Noize":{
-		// "x": 18.0,
-		// "y": 0.1,
-		// "dimMax": 0.05,
-		// "N": 400,
-		// "distFactor": 10,
-		"x": 5.0,
+		"x": 18.0,
 		"y": 0.1,
-		"dimMax": 0.01,
-		"N": 3000,
-		"distFactor": 25,
+		"dimMax": 0.05,
+		"N": 400,
+		"distFactor": 10,
+		// "x": 5.0,
+		// "dimMax": 0.01,
+		// "N": 1500,
+		// "distFactor": 15
 		"Properties":{
 			"density": 1e4,
 			"YoungModulus": 1e8

@@ -1,4 +1,4 @@
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/assets/ChTexture.h"
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 
     try {
 
-        ChSystemNSC sys;
+        ChSystemSMC sys;
 
         ChCollisionSystem::Type collision_type = ChCollisionSystem::Type::BULLET;
         sys.SetCollisionSystemType(collision_type);
@@ -56,6 +56,7 @@ int main(int argc, char* argv[]) {
 
         newSystem.BuildConfig(config);
         newSystem.AddSystem(sys);
+        newSystem.SetWheelVel(0);
 
 
         // Add Obstacles in the system
@@ -64,28 +65,38 @@ int main(int argc, char* argv[]) {
                     ChVector3d(config["Brick1"]["Position"]["x"].GetDouble(),
                                 config["Brick1"]["Position"]["y"].GetDouble(),
                                 config["Brick1"]["Position"]["z"].GetDouble()),
-                            config["Brick1"]["Dimention"]["x"].GetDouble(),
-                            config["Brick1"]["Dimention"]["y"].GetDouble(),
-                            config["Brick1"]["Dimention"]["z"].GetDouble());
+                                config["Brick1"]["Dimention"]["x"].GetDouble(),
+                                config["Brick1"]["Dimention"]["y"].GetDouble(),
+                                config["Brick1"]["Dimention"]["z"].GetDouble(),
+                                config["Brick1"]["Properties"]["density"].GetDouble(),
+                                config["Brick1"]["Properties"]["YoungModulus"].GetDouble()
+            );
                     
         newSystem.CreateBrick(sys,
                     ChVector3d(config["Brick2"]["Position"]["x"].GetDouble(),
                                 config["Brick2"]["Position"]["y"].GetDouble(),
                                 config["Brick2"]["Position"]["z"].GetDouble()),
-                            config["Brick2"]["Dimention"]["x"].GetDouble(),
-                            config["Brick2"]["Dimention"]["y"].GetDouble(),
-                            config["Brick2"]["Dimention"]["z"].GetDouble());
+                                config["Brick2"]["Dimention"]["x"].GetDouble(),
+                                config["Brick2"]["Dimention"]["y"].GetDouble(),
+                                config["Brick2"]["Dimention"]["z"].GetDouble(),
+                                config["Brick2"]["Properties"]["density"].GetDouble(),
+                                config["Brick2"]["Properties"]["YoungModulus"].GetDouble());
         newSystem.CreateBumper(sys,
                     ChVector3d(config["Bumper"]["Position"]["x"].GetDouble(),
                                 config["Bumper"]["Position"]["y"].GetDouble(),
                                 config["Bumper"]["Position"]["z"].GetDouble()),
                             config["Bumper"]["Dimention"]["r"].GetDouble(),
-                            config["Bumper"]["Dimention"]["h"].GetDouble());
+                            config["Bumper"]["Dimention"]["h"].GetDouble(),
+                            config["Bumper"]["Properties"]["density"].GetDouble(),
+                            config["Bumper"]["Properties"]["YoungModulus"].GetDouble());
 
         newSystem.AddRandomCylinders(sys, config["Noize"]["x"].GetDouble(),
+                                config["Noize"]["y"].GetDouble(),
                                 config["Noize"]["dimMax"].GetDouble(), 
                                 config["Noize"]["N"].GetDouble(),
-                                config["Noize"]["distFactor"].GetDouble());
+                                config["Noize"]["distFactor"].GetDouble(),
+                                config["Noize"]["Properties"]["density"].GetDouble(),
+                                config["Noize"]["Properties"]["YoungModulus"].GetDouble());
 
         // Get parameters for Simulation
         // Here the 'dt' must be the same of the sampling period that is
@@ -93,6 +104,7 @@ int main(int argc, char* argv[]) {
 
         control = config["General"]["Control"].GetBool();
         double dt = config["General"]["Ts"].GetDouble();
+        //double delay = config["General"]["StartDelay"].GetDouble();
 
         // Get values for camera position wrt to body
         double actCamPosX = config["Camera"]["x"].GetDouble();
@@ -167,6 +179,8 @@ int main(int argc, char* argv[]) {
 
         while (vis->Run()) 
         {
+            if (time <= 1)
+                newSystem.SetWheelVel(time);
 
             // Render scene
             vis->BeginScene();
