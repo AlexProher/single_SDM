@@ -5,7 +5,7 @@
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/collision/ChCollisionSystem.h"
 #include "chrono/utils/ChSocketCommunication.h"
-#include "MySystem.h"
+#include "SourceFiles/MySystem.h"
 
 #include <fstream>
 
@@ -188,10 +188,9 @@ int main(int argc, char* argv[]) {
             vis->EndScene();
 
             actCamPosX = newSystem.GetBodyPos().x();
-
             vis->UpdateCamera(ChVector3d(actCamPosX, actCamPosY, actCamPosZ), newSystem.GetBodyPos());
-            tools::drawSpring(vis.get(), 1, newSystem.GetBodyPos(), newSystem.GetWheelPos(),
-                                        ChColor(1, 1, 1), 80, 10, true);
+
+
 
             // Perform the integration stpe
             sys.DoStepDynamics(dt);

@@ -1,6 +1,6 @@
 {
 	"General":{
-		"Control": true,
+		"Control": false,
 		// "Control": true,	
 		"WorstGainCaseMode": true,			
 		"Ts": 0.001,
@@ -109,7 +109,7 @@
 		"x": 5.0,
 		"y": 0.1,
 		"dimMax": 0.01,
-		"N": 3000,
+		"N": 1000,
 		"distFactor": 25,
 		"Properties":{
 			"density": 1e4,
