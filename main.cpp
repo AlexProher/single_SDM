@@ -38,10 +38,12 @@ void ReadFileJSON(const std::string& filename, Document& d) {
 int main(int argc, char* argv[]) {
 
     bool control = false;
+    std::cout << "Current path is " << std::filesystem::current_path()
+             << std::endl;
 
     Document config;
     ReadFileJSON("../../sourceFiles/configuration.json", config);
-    //ReadFileJSON("../sourceFiles/configuration.json", config);    // in case of Debug
+//    ReadFileJSON("/Users/alexprokhorov/Git/ChronoProject/single_SDM/sourceFiles/configuration.json", config);    // in case of Debug
 
     try {
 
@@ -137,7 +139,7 @@ int main(int argc, char* argv[]) {
         }
         else {
             std::cout << "To start press Enter";
-            getchar();
+//            getchar();
         }
         
         // Prepare the two column vectors of data that will be swapped

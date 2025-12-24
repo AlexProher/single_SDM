@@ -77,6 +77,14 @@ if (NOT Chrono_FOUND)
 endif()
 
 #--------------------------------------------------------------
+# Important! To ensure ABI compatibility, use the same C++ standard
+# as the one used to build the Chrono libraries.
+#--------------------------------------------------------------
+
+# set(CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_STANDARD ${CHRONO_CXX_STANDARD})
+
+#--------------------------------------------------------------
 # Enable creation of "application bundles" on MacOSX.
 #--------------------------------------------------------------
 
@@ -98,34 +106,55 @@ endif()
 
 set(MY_FILES main.cpp)
 
-add_executable(SDM ${MY_FILES} sourceFiles/MySystem.h sourceFiles/MySystem.cpp)
+#-----------------------------------------------------------------------------
+# Fix for VS 2017 15.8 and newer to handle alignment specification with Eigen
+#-----------------------------------------------------------------------------
 
-#--------------------------------------------------------------
-# Set properties for the executable target
-#--------------------------------------------------------------
-
-# Here, we define a macro CHRONO_DATA_DIR which will contain the
-# path to the Chrono data directory, either in its source tree
-# (if using a build version of Chrono), or in its install tree
-# (if using an installed version of Chrono).
-target_compile_definitions(SDM PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
-
-if(MSVC)
-    set_target_properties(SDM PROPERTIES MSVC_RUNTIME_LIBRARY ${CHRONO_MSVC_RUNTIME_LIBRARY})
-endif()
 
 #--------------------------------------------------------------
 # Link to Chrono targets for the requested modules
 #--------------------------------------------------------------
 
-target_link_libraries(SDM PRIVATE ${CHRONO_TARGETS})
+set(MY_FILES 
+  main.cpp 
+  sourceFiles/MySystem.h 
+  sourceFiles/MySystem.cpp)
 
+add_executable(SDM ${MY_FILES})
+
+target_compile_definitions(SDM PRIVATE "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+
+if(MSVC)
+    set_target_properties(SDM PROPERTIES MSVC_RUNTIME_LIBRARY ${CHRONO_MSVC_RUNTIME_LIBRARY})
+endif()
 #--------------------------------------------------------------
 # 4. OPTIONAL (Windows only)
 # 
-# Add a custom command for copying all Chrono and
+# Note that here we define a macro CHRONO_DATA_DIR which will
+# contain the path to the Chrono data directory, either in its
+# source tree (if using a build version of Chrono), or in its
+# install tree (if using an installed version of Chrono).
+#--------------------------------------------------------------
+
+# target_compile_definitions(SDM PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+# target_compile_options(SDM PUBLIC ${CHRONO_CXX_FLAGS})
+# target_link_options(SDM PUBLIC ${CHRONO_LINKER_FLAGS})
+
+#--------------------------------------------------------------
+# Link to Chrono libraries and dependency libraries
+#--------------------------------------------------------------
+
+target_link_libraries(SDM PRIVATE ${CHRONO_TARGETS})
+
+#--------------------------------------------------------------
+# === 4 (OPTIONAL) ===
+# 
+# Optionally, add a custom command for copying all Chrono and
 # dependency DLLs to the appropriate binary output folder.
 # This function has effect only on Windows.
 #--------------------------------------------------------------
 
-add_DLL_copy_command()
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "<mycustompathforrelease>")
+
+add_CHRONO_DLLS_copy_command()

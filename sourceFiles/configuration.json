@@ -38,8 +38,8 @@
 	"SD":
 	{
 		"spring_wc": 2500,	//wc
-		"spring_nominal": 5000,	//nominal
-		"damping_wc": 25, //wc
+		"spring_nominal": 1000,	//nominal
+		"damping_wc": 5, //wc
 		"damping_nominal": 50,	//nomianl
 		"base": 4
 	},
